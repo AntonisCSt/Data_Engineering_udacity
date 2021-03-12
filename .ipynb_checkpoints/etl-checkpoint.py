@@ -7,18 +7,16 @@ from sql_queries import *
 #A global variable for the process_log_file function. It will check if any none value was inserted within the songplays table
 none_exists = False
 
-def get_files(filepath):
-    all_files = []
-    for root, dirs, files in os.walk(filepath):
-        files = glob.glob(os.path.join(root,'*.json'))
-        for f in files :
-            all_files.append(os.path.abspath(f))
-    
-    return all_files
 
 def process_song_file(cur, filepath):
     """This function is responsible for the song and artist tables. It will open the song files in the pathfiel
     and insert both tables from the json files
+    
+    Arguments:
+        cur: DB cursor connection
+        filepath: path to files
+    Return: insert into song and artist tables  
+    
     """
     # open song file
     df = pd.read_json(filepath, lines=True)
@@ -34,6 +32,15 @@ def process_song_file(cur, filepath):
 
 
 def process_log_file(cur, filepath):
+    """This function is responsible for tables related to song loggings. It will open the song files in the pathfile
+    and insert both tables from the json files
+    
+     Arguments:
+        cur: DB cursor connection
+        filepath: path to files
+    Return: insert into time, user songplays tables  
+    
+    """
     global none_exists
     # open log file
     df = pd.read_json(filepath, lines=True)
@@ -78,7 +85,6 @@ def process_log_file(cur, filepath):
             songid, artistid = results
         else:
             songid, artistid = None, None
-            print("ERROR songid or artistid contain None value")
             none_exists = True
         
    
@@ -88,6 +94,16 @@ def process_log_file(cur, filepath):
 
 
 def process_data(cur, conn, filepath, func):
+    """This function is responsible for processing the data. It will look at all the files from the directory, iterate through them and print out how many they have been processed
+    
+    Arguments:
+        cur: DB cursor connection
+        conn: connection with the dabase
+        filepath: path to files
+        func: function either the process_song_file or process_log_file
+    Return: commints of table inserts from the functions  
+    
+    """
     # get all files matching extension from directory
     all_files = []
     for root, dirs, files in os.walk(filepath):
@@ -107,6 +123,9 @@ def process_data(cur, conn, filepath, func):
 
 
 def main():
+    """main function of the etl.py. It conencts to the sparkifydb database and uses the process_data function to create and insert the tables. It also prints wether specific
+    tables contain none values
+    """
     global none_exists
     conn = psycopg2.connect("host=127.0.0.1 dbname=sparkifydb user=student password=student")
     cur = conn.cursor()
@@ -114,6 +133,7 @@ def main():
     process_data(cur, conn, filepath='data/song_data/A', func=process_song_file)
     process_data(cur, conn, filepath='data/log_data/2018', func=process_log_file)
     
+    print("FINISHED!")
     if none_exists == False:
         print("songid and artistid values do not contain None values :D ")
     else:

@@ -85,7 +85,6 @@ def process_log_file(cur, filepath):
             songid, artistid = results
         else:
             songid, artistid = None, None
-            print("ERROR songid or artistid contain None value")
             none_exists = True
         
    
